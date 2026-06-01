@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP Data Tool</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:#f3f4f6;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:32px 16px;color:#111827}
+    .container{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);max-width:720px;width:100%;padding:24px 28px 28px;border:1px solid #e5e7eb}
+    .header{text-align:center;margin-bottom:20px}
+    .header h1{font-size:26px;font-weight:600;color:#111827;margin-bottom:4px}
+    .header p{font-size:13px;color:#6b7280}
+    .note-banner{margin:18px 0;padding:10px 12px;border-radius:6px;background:#e5f0ff;border-left:4px solid #2563eb;font-size:12px;color:#1f2937}
+    .note-banner strong{font-weight:600;margin-right:4px}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px}
+    .required{color:#dc2626}
+    select,input[type="url"],input[type="text"]{width:100%;padding:9px 12px;border-radius:6px;border:1px solid #d1d5db;font-size:13px;background:#f9fafb;color:#111827;transition:border-color .15s,background-color .15s,box-shadow .15s}
+    select:focus,input[type="url"]:focus,input[type="text"]:focus{outline:none;border-color:#2563eb;background:#fff;box-shadow:0 0 0 1px rgba(37,99,235,.2)}
+    .inline-helper{font-size:11px;color:#6b7280;margin-top:3px}
+    .button-row{margin-top:8px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .btn-primary{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:500;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.12);transition:background .15s,box-shadow .15s,transform .15s}
+    .btn-primary:hover:not(:disabled){background:#1d4ed8;transform:translateY(-.5px);box-shadow:0 3px 6px rgba(15,23,42,.16)}
+    .btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+    .config-status{font-size:11px;color:#4b5563}
+    .category-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;margin-top:4px}
+    .category-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;font-size:12px;color:#374151;cursor:pointer}
+    .category-item input{width:14px;height:14px}
+    .selection-summary{margin-top:4px;padding:6px 8px;border-radius:4px;background:#ecfdf3;border:1px solid #bbf7d0;font-size:11px;color:#166534;display:none}
+    .selection-summary.active{display:block}
+    .file-upload-label{display:flex;align-items:center;justify-content:center;padding:14px 12px;border-radius:8px;border:1px dashed #cbd5f5;background:#f9fafb;font-size:13px;color:#4b5563;cursor:pointer;transition:border-color .15s,background .15s}
+    .file-upload-label:hover{border-color:#2563eb;background:#eff6ff}
+    .file-upload-label.has-file{border-color:#16a34a;background:#ecfdf3}
+    .file-text .main-text{display:block;font-size:13px;font-weight:500;margin-bottom:2px}
+    .file-text .sub-text{display:block;font-size:11px;color:#9ca3af}
+    #fileInput{display:none}
+    .file-list{margin-top:8px;padding:8px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb;display:none;max-height:140px;overflow-y:auto}
+    .file-list.active{display:block}
+    .file-item{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:5px;background:#fff;border:1px solid #e5e7eb;font-size:12px;margin-bottom:6px}
+    .file-item-name{flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .file-item-size{font-size:11px;color:#9ca3af;margin-right:8px}
+    .file-item-remove{border:none;background:#fee2e2;color:#b91c1c;font-size:11px;border-radius:4px;padding:2px 6px;cursor:pointer}
+    .btn-submit{width:100%;margin-top:14px;padding:11px 16px;border-radius:999px;border:none;background:#9ca3af;color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s,box-shadow .15s,transform .15s}
+    .btn-submit.enabled{background:#2563eb}
+    .btn-submit.enabled:hover:not(:disabled){background:#1d4ed8;transform:translateY(-.5px);box-shadow:0 4px 7px rgba(37,99,235,.3)}
+    .btn-submit:disabled{cursor:not-allowed}
+    .loading{display:none;margin-top:14px;font-size:12px;color:#4b5563}
+    .loading.active{display:block}
+    .loading-inner{display:inline-flex;align-items:center}
+    .spinner{width:18px;height:18px;border-radius:50%;border:2px solid #e5e7eb;border-top-color:#2563eb;animation:spin .8s linear infinite;margin-right:6px}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .progress-container{display:none;margin-top:8px}
+    .progress-container.active{display:block}
+    .progress-bar{width:100%;height:6px;border-radius:999px;background:#e5e7eb;overflow:hidden}
+    .progress-fill{width:0;height:100%;border-radius:999px;background:linear-gradient(90deg,#2563eb,#4f46e5);transition:width .2s}
+    .progress-text{margin-top:4px;font-size:11px;color:#6b7280;text-align:right}
+    .alert{display:none;margin-top:14px;padding:10px 11px;border-radius:8px;font-size:12px;max-height:200px;overflow-y:auto}
+    .alert.active{display:block}
+    .alert-success{background:#ecfdf3;border:1px solid #bbf7d0;color:#166534}
+    .alert-error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+    .alert-title{font-weight:600;margin-bottom:4px}
+    .result-item{padding:5px 6px;margin-top:3px;border-radius:4px;background:#fff;border-left:3px solid #16a34a;font-size:11px}
+    .result-item.error{border-left-color:#dc2626}
+    .category-header-row{display:flex;justify-content:space-between;align-items:center}
+    .select-all-link{font-size:11px;color:#2563eb;cursor:pointer;text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SAP Data Tool</h1>
+      <p>Upload SAP Excel files for Data Processing</p>
+    </div>
+
+    <div class="note-banner">
+      <strong>Note:</strong> First time or when changing sheets, enter your Google Sheet URL and click “Validate &amp; Load Sheets”. After that, it will auto-load.
+    </div>
+
+    <form id="uploadForm">
+      <div class="form-group" id="sheetUrlWrapper">
+        <label for="sheetUrl">Google Sheet URL <span class="required">*</span></label>
+        <input type="url" id="sheetUrl"
+               placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit">
+        <div class="inline-helper">
+          Stored per financial year. Click “Validate &amp; Load Sheets” after entering.
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn-primary" id="validateUrlBtn">
+            Validate &amp; Load Sheets
+          </button>
+          <span class="config-status" id="sheetUrlStatus">Not validated yet.</span>
+          <button type="button" class="btn-primary" id="changeSheetUrlBtn" style="display:none;">
+            Change Sheet URL
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="sheetTab">Sheet Tab Name <span class="required">*</span></label>
+        <select id="sheetTab" disabled>
+          <option value="">-- Validate URL first --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="section">Section <span class="required">*</span></label>
+        <select id="section">
+          <option value="">-- Select --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="category-header-row">
+          <label>Categories <span class="required">*</span></label>
+          <span id="selectAllCategories" class="select-all-link" style="display:none;">Select All</span>
+        </div>
+        <div id="categoryContainer" class="category-list"></div>
+        <div class="inline-helper" id="categoryHelper">Select a section first.</div>
+        <div id="categorySummary" class="selection-summary"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="year">Year <span class="required">*</span></label>
+        <select id="year">
+          <option value="">-- Select --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="month">Month <span class="required">*</span></label>
+        <select id="month">
+          <option value="">-- Select --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Upload SAP Files <span class="required">*</span></label>
+        <div class="file-upload-wrapper">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
+          <label for="fileInput" class="file-upload-label" id="fileLabel">
+            <span class="file-text">
+              <span class="main-text">Click to Select or Drag Excel Files</span>
+              <span class="sub-text">Supported formats: .xlsx, .xls, .csv</span>
+            </span>
+          </label>
+        </div>
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>
+        Process &amp; Upload Data
+      </button>
+
+      <div class="loading" id="loading">
+        <div class="loading-inner">
+          <div class="spinner"></div>
+          <span id="loadingText">Processing your files...</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">0 of 0 processed</div>
+        </div>
+      </div>
+
+      <div class="alert alert-success" id="successAlert">
+        <div class="alert-title">Success</div>
+        <div class="alert-message" id="successMessage"></div>
+      </div>
+
+      <div class="alert alert-error" id="errorAlert">
+        <div class="alert-title">Errors</div>
+        <div class="alert-message" id="errorMessage"></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let selectedFiles = [];
+    let sheetsLoaded = false;
+
+    function getCurrentFinancialYear() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = today.getMonth();
+      const startYear = m < 3 ? y - 1 : y;
+      const endShort = String((startYear + 1) % 100).padStart(2, "0");
+      return startYear + "-" + endShort;
+    }
+
+    function populateFinancialYears() {
+      const sel = document.getElementById("year");
+      const currentFY = getCurrentFinancialYear();
+      const startYear = 2021;
+      const lastStart = parseInt(currentFY.substring(0, 4), 10);
+      sel.innerHTML = '<option value="">-- Select --</option>';
+      for (let y = lastStart; y >= startYear; y--) {
+        const label = y + "-" + String((y + 1) % 100).padStart(2, "0");
+        const opt = document.createElement("option");
+        opt.value = label;
+        opt.textContent = label;
+        if (label === currentFY) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+
+    function populateMonths(months) {
+      const sel = document.getElementById("month");
+      sel.innerHTML = '<option value="">-- Select --</option>';
+      months.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        sel.appendChild(opt);
+      });
+      const currentMonth = new Date().toLocaleString(undefined,{month:"long"});
+      if ([...sel.options].some(o => o.value === currentMonth)) sel.value = currentMonth;
+    }
+
+    function checkFormReady() {
+      const url = document.getElementById("sheetUrl").value.trim();
+      const tab = document.getElementById("sheetTab").value;
+      const section = document.getElementById("section").value;
+      const year = document.getElementById("year").value;
+      const month = document.getElementById("month").value;
+      const catCount = document.querySelectorAll("#categoryContainer input[type='checkbox']:checked").length;
+      const submitBtn = document.getElementById("submitBtn");
+      const ready = url && tab && section && year && month &&
+                    catCount > 0 && selectedFiles.length > 0 && sheetsLoaded;
+      submitBtn.disabled = !ready;
+      if (ready) submitBtn.classList.add("enabled");
+      else submitBtn.classList.remove("enabled");
+    }
+
+    window.addEventListener("load", function () {
+      populateFinancialYears();
+
+      google.script.run
+        .withSuccessHandler(function (sections) {
+          const sel = document.getElementById("section");
+          sel.innerHTML = '<option value="">-- Select --</option>';
+          sections.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.toUpperCase();
+            opt.textContent = s;
+            sel.appendChild(opt);
+          });
+        })
+        .getSections();
+
+      google.script.run
+        .withSuccessHandler(populateMonths)
+        .withFailureHandler(function () {
+          populateMonths([
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+          ]);
+        })
+        .getMonths();
+
+      google.script.run
+        .withSuccessHandler(function (cfg) {
+          const urlInput  = document.getElementById("sheetUrl");
+          const status    = document.getElementById("sheetUrlStatus");
+          const changeBtn = document.getElementById("changeSheetUrlBtn");
+          const validateBtn = document.getElementById("validateUrlBtn");
+          const label     = document.querySelector("#sheetUrlWrapper label");
+
+          if (!cfg || !cfg.sheetUrl) {
+            urlInput.value = "";
+            status.textContent = "Enter URL and click Validate & Load Sheets.";
+            urlInput.style.display = "block";
+            label.style.display = "block";
+            validateBtn.style.display = "inline-flex";
+            changeBtn.style.display = "none";
+            sheetsLoaded = false;
+            return;
+          }
+
+          urlInput.value = cfg.sheetUrl;
+
+          if (cfg.validated) {
+            validateBtn.style.display = "none";
+            changeBtn.style.display = "inline-flex";
+            urlInput.style.display = "none";
+            label.style.display = "none";
+            status.textContent = "Loading saved sheet...";
+            autoValidateSheetUrl(cfg.sheetUrl, true, true);
+          } else {
+            validateBtn.style.display = "inline-flex";
+            changeBtn.style.display = "none";
+            urlInput.style.display = "block";
+            label.style.display = "block";
+            status.textContent = "Saved URL found. Click Validate & Load Sheets.";
+            sheetsLoaded = false;
+          }
+        })
+        .getUserConfig();
+    });
+
+    function autoValidateSheetUrl(url, hideAfter, silent) {
+      const urlInput  = document.getElementById("sheetUrl");
+      const status    = document.getElementById("sheetUrlStatus");
+      const tabSelect = document.getElementById("sheetTab");
+      const changeBtn = document.getElementById("changeSheetUrlBtn");
+      const validateBtn = document.getElementById("validateUrlBtn");
+      const label     = document.querySelector("#sheetUrlWrapper label");
+
+      if (!url) {
+        if (!silent) status.textContent = "Please enter a Google Sheet URL.";
+        return;
+      }
+
+      if (!silent) status.textContent = "Validating...";
+      tabSelect.disabled = true;
+      tabSelect.innerHTML = '<option value="">-- Loading sheets --</option>';
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          const sheets = res && res.sheets ? res.sheets : [];
+          tabSelect.disabled = false;
+          tabSelect.innerHTML = '<option value="">-- Select Sheet --</option>';
+          sheets.forEach(function (name) {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            tabSelect.appendChild(opt);
+          });
+
+          const defaultName = "Operational Data";
+          if (sheets.indexOf(defaultName) !== -1) tabSelect.value = defaultName;
+
+          status.textContent = "Sheet loaded.";
+          sheetsLoaded = true;
+
+          if (hideAfter) {
+            urlInput.style.display = "none";
+            label.style.display = "none";
+            changeBtn.style.display = "inline-flex";
+            validateBtn.style.display = "none";
+          }
+
+          google.script.run.saveUserConfig({
+            sheetUrl: url,
+            sheetTab: tabSelect.value || "",
+            financialYear: getCurrentFinancialYear(),
+            validated: true
+          });
+
+          checkFormReady();
+        })
+        .withFailureHandler(function (err) {
+          status.textContent = "Validation failed.";
+          tabSelect.disabled = true;
+          tabSelect.innerHTML = '<option value="">-- Validate URL first --</option>';
+          if (!silent) showError("Unable to validate Google Sheet URL: " + err);
+          sheetsLoaded = false;
+          checkFormReady();
+        })
+        .validateAndGetSheets(url);
+    }
+
+    document.getElementById("validateUrlBtn").addEventListener("click", function () {
+      const url = document.getElementById("sheetUrl").value.trim();
+      autoValidateSheetUrl(url, true, false);
+    });
+
+    document.getElementById("changeSheetUrlBtn").addEventListener("click", function () {
+      const wrapper = document.getElementById("sheetUrlWrapper");
+      const urlInput = document.getElementById("sheetUrl");
+      const status = document.getElementById("sheetUrlStatus");
+      const tabSelect = document.getElementById("sheetTab");
+      const validateBtn = document.getElementById("validateUrlBtn");
+
+      urlInput.style.display = "block";
+      wrapper.querySelector("label").style.display = "block";
+      urlInput.value = "";
+      status.textContent = "Enter URL and click Validate & Load Sheets.";
+
+      validateBtn.style.display = "inline-flex";
+      this.style.display = "none";
+
+      tabSelect.disabled = true;
+      tabSelect.innerHTML = '<option value="">-- Validate URL first --</option>';
+      sheetsLoaded = false;
+
+      google.script.run.clearUserConfig();
+      checkFormReady();
+    });
+
+    document.getElementById("section").addEventListener("change", function () {
+      const val = this.value;
+      const container = document.getElementById("categoryContainer");
+      const helper = document.getElementById("categoryHelper");
+      const summary = document.getElementById("categorySummary");
+      const selectAllLink = document.getElementById("selectAllCategories");
+      container.innerHTML = "";
+      summary.classList.remove("active");
+      helper.textContent = "Loading categories...";
+      selectAllLink.style.display = "none";
+      selectAllLink.textContent = "Select All";
+
+      if (!val) {
+        helper.textContent = "Select a section first.";
+        return;
+      }
+
+      const display = {
+        "MONTHLY PRODUCTION":"Monthly Production",
+        "MONTHLY SALES":"Monthly Sales",
+        "SALE PRICE":"Sale Price"
+      }[val] || val;
+
+      google.script.run
+        .withSuccessHandler(function (cats) {
+          container.innerHTML = "";
+          if (!cats || !cats.length) {
+            helper.textContent = "No categories available for this section.";
+            return;
+          }
+          cats.forEach(function (c,i) {
+            const id = "cat_" + i;
+            const wrap = document.createElement("div");
+            wrap.className = "category-item";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.id = id;
+            cb.value = c;
+            const lab = document.createElement("label");
+            lab.htmlFor = id;
+            lab.textContent = c;
+            wrap.appendChild(cb); wrap.appendChild(lab);
+            container.appendChild(wrap);
+          });
+          helper.textContent = "Select one or more categories.";
+          selectAllLink.style.display = "inline";
+          checkFormReady();
+        })
+        .getCategoriesForSection(display);
+    });
+
+    document.getElementById("categoryContainer").addEventListener("change", function () {
+      const selected = Array.from(
+        document.querySelectorAll("#categoryContainer input[type='checkbox']:checked")
+      ).map(c => c.value);
+      const summary = document.getElementById("categorySummary");
+      const selectAllLink = document.getElementById("selectAllCategories");
+      const total = document.querySelectorAll("#categoryContainer input[type='checkbox']").length;
+
+      if (selected.length) {
+        summary.textContent = selected.length + " selected: " + selected.join(", ");
+        summary.classList.add("active");
+      } else {
+        summary.classList.remove("active");
+        summary.textContent = "";
+      }
+
+      if (total && selected.length === total) {
+        selectAllLink.textContent = "Deselect All";
+      } else {
+        selectAllLink.textContent = "Select All";
+      }
+
+      checkFormReady();
+    });
+
+    document.getElementById("selectAllCategories").addEventListener("click", function () {
+      const checkboxes = document.querySelectorAll("#categoryContainer input[type='checkbox']");
+      if (!checkboxes.length) return;
+      const selected = document.querySelectorAll("#categoryContainer input[type='checkbox']:checked").length;
+      const selectAll = selected !== checkboxes.length;
+
+      checkboxes.forEach(cb => { cb.checked = selectAll; });
+
+      const event = new Event("change", { bubbles: true });
+      document.getElementById("categoryContainer").dispatchEvent(event);
+    });
+
+    const fileInput = document.getElementById("fileInput");
+    const fileLabel = document.getElementById("fileLabel");
+    const fileListEl = document.getElementById("fileList");
+
+    function validateFiles(files) {
+      const maxSize = 10 * 1024 * 1024 * 1024;
+      const valid = [], invalid = [];
+      files.forEach(f => {
+        const okType = /\.(xlsx|xls|csv)$/i.test(f.name);
+        const okSize = f.size <= maxSize;
+        (okType && okSize ? valid : invalid).push(f);
+      });
+      return { valid, invalid };
+    }
+
+    function updateFileInput() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(f => dt.items.add(f));
+      fileInput.files = dt.files;
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return "0 B";
+      const k = 1024;
+      const sizes = ["B","KB","MB","GB"];
+      const i = Math.floor(Math.log(bytes)/Math.log(k));
+      return (bytes/Math.pow(k,i)).toFixed(2) + " " + sizes[i];
+    }
+
+    function refreshFileListUI() {
+      fileListEl.innerHTML = "";
+      if (!selectedFiles.length) {
+        fileListEl.classList.remove("active");
+        fileLabel.classList.remove("has-file");
+        fileLabel.querySelector(".main-text").textContent =
+          "Click to Select or Drag Excel Files";
+        fileLabel.querySelector(".sub-text").textContent =
+          "Supported formats: .xlsx, .xls, .csv";
+        checkFormReady();
+        return;
+      }
+
+      fileListEl.classList.add("active");
+      fileLabel.classList.add("has-file");
+      fileLabel.querySelector(".main-text").textContent =
+        selectedFiles.length + " file(s) selected";
+      fileLabel.querySelector(".sub-text").textContent =
+        "Click to add more files";
+
+      selectedFiles.forEach((f,idx) => {
+        const item = document.createElement("div");
+        item.className = "file-item";
+        const name = document.createElement("div");
+        name.className = "file-item-name";
+        name.textContent = f.name;
+        const size = document.createElement("div");
+        size.className = "file-item-size";
+        size.textContent = formatBytes(f.size);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "file-item-remove";
+        btn.textContent = "Remove";
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          selectedFiles.splice(idx,1);
+          updateFileInput();
+          refreshFileListUI();
+        };
+        item.appendChild(name); item.appendChild(size); item.appendChild(btn);
+        fileListEl.appendChild(item);
+      });
+      checkFormReady();
+    }
+
+    fileInput.addEventListener("change", function () {
+      const incoming = Array.from(fileInput.files || []);
+      const { valid, invalid } = validateFiles(incoming);
+      if (invalid.length) {
+        showError(invalid.length + " file(s) rejected: " + invalid.map(f=>f.name).join(", "));
+      }
+      if (valid.length) {
+        const key = f => f.name + "|" + f.size;
+        const existing = new Set(selectedFiles.map(key));
+        valid.forEach(f => { if (!existing.has(key(f))) selectedFiles.push(f); });
+        updateFileInput();
+        refreshFileListUI();
+      } else {
+        fileInput.value = "";
+      }
+    });
+
+    fileLabel.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      fileLabel.style.borderColor = "#2563eb";
+      fileLabel.style.background = "#eff6ff";
+    });
+
+    ["dragleave","dragend"].forEach(ev =>
+      fileLabel.addEventListener(ev, function () {
+        fileLabel.style.borderColor = "#cbd5f5";
+        fileLabel.style.background = "#f9fafb";
+      })
+    );
+
+    fileLabel.addEventListener("drop", function (e) {
+      e.preventDefault();
+      fileLabel.style.borderColor = "#cbd5f5";
+      fileLabel.style.background = "#f9fafb";
+      const incoming = Array.from(e.dataTransfer.files || []);
+      if (!incoming.length) return;
+      const { valid, invalid } = validateFiles(incoming);
+      if (invalid.length) {
+        showError(invalid.length + " file(s) rejected: " + invalid.map(f=>f.name).join(", "));
+      }
+      if (valid.length) {
+        const key = f => f.name + "|" + f.size;
+        const existing = new Set(selectedFiles.map(key));
+        valid.forEach(f => { if (!existing.has(key(f))) selectedFiles.push(f); });
+        updateFileInput();
+        refreshFileListUI();
+      }
+    });
+
+    // helper from your snippet
+    function getBase64FromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function processFileOnServer(base64Data, fileName, section, categories, month, year, sheetUrl, sheetName) {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(response => resolve(response))
+          .withFailureHandler(error => reject(error))
+          .handleSingleFile(base64Data, fileName, section, categories, month, year, sheetUrl, sheetName);
+      });
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById("submitBtn");
+      if (submitBtn.disabled) return;
+
+      document.getElementById("successAlert").classList.remove("active");
+      document.getElementById("errorAlert").classList.remove("active");
+      document.getElementById("successMessage").innerHTML = "";
+      document.getElementById("errorMessage").innerHTML = "";
+
+      const sheetUrl = document.getElementById("sheetUrl").value.trim();
+      const sheetTab = document.getElementById("sheetTab").value;
+      const section = document.getElementById("section").value;
+      const year = document.getElementById("year").value;
+      const month = document.getElementById("month").value;
+      const categories = Array.from(
+        document.querySelectorAll("#categoryContainer input[type='checkbox']:checked")
+      ).map(c => c.value);
+
+      if (!sheetUrl || !sheetTab || !section || !year || !month || !categories.length) {
+        showError("Please fill all required fields.");
+        return;
+      }
+      if (!selectedFiles.length) {
+        showError("Please add at least one file.");
+        return;
+      }
+
+      const loading = document.getElementById("loading");
+      const progressContainer = document.querySelector(".progress-container");
+      const progressFill = document.getElementById("progressFill");
+      const progressText = document.getElementById("progressText");
+      const loadingText = document.getElementById("loadingText");
+
+      loading.classList.add("active");
+      progressContainer.classList.add("active");
+      submitBtn.disabled = true;
+
+      const total = selectedFiles.length;
+      let processed = 0, ok = 0, errCount = 0;
+
+      progressFill.style.width = "0%";
+      progressText.textContent = "0 of " + total + " processed";
+
+      for (const file of selectedFiles) {
+        loadingText.textContent = "Processing: " + file.name + "...";
+
+        try {
+          const base64 = await getBase64FromFile(file);
+          const resp = await processFileOnServer(
+            base64,
+            file.name,
+            section,
+            categories,
+            month,
+            year,
+            sheetUrl,
+            sheetTab
+          );
+
+          if (resp.status === "ERROR") {
+            errCount++;
+            const node = document.createElement("div");
+            node.className = "result-item error";
+            node.innerHTML = `<strong>${file.name}:</strong> ${resp.message}`;
+            document.getElementById("errorMessage").appendChild(node);
+          } else {
+            ok++;
+            const node = document.createElement("div");
+            node.className = "result-item";
+            node.innerHTML = `<strong>${file.name}:</strong> Data uploaded successfully.`;
+            document.getElementById("successMessage").appendChild(node);
+
+            if (resp.status === "WARNING" && resp.unknownItems && resp.unknownItems.length > 0) {
+              alert(
+                "?? ATTENTION: Undefined " + resp.unknownType + "\n\n" +
+                "File: " + file.name + "\n" +
+                "The following codes were NOT found in configuration and were excluded from calculation:\n\n" +
+                resp.unknownItems.join("\n") +
+                "\n\nValid data was still uploaded to the sheet."
+              );
+            }
+          }
+        } catch (err) {
+          errCount++;
+          const node = document.createElement("div");
+          node.className = "result-item error";
+          node.innerHTML = `<strong>${file.name}:</strong> System Error – ${err}`;
+          document.getElementById("errorMessage").appendChild(node);
+        }
+
+        processed++;
+        const pct = Math.round((processed / total) * 100);
+        progressFill.style.width = pct + "%";
+        progressText.textContent =
+          processed + " of " + total + " processed";
+      }
+
+      loading.classList.remove("active");
+      progressContainer.classList.remove("active");
+      submitBtn.disabled = false;
+      checkFormReady();
+
+      if (ok) {
+        const node = document.createElement("div");
+        node.className = "result-item";
+        node.textContent = ok + " file(s) uploaded successfully.";
+        document.getElementById("successMessage").appendChild(node);
+        document.getElementById("successAlert").classList.add("active");
+      }
+      if (errCount) {
+        document.getElementById("errorAlert").classList.add("active");
+      }
+      if (!errCount) {
+        selectedFiles = [];
+        updateFileInput();
+        refreshFileListUI();
+      }
+    });
+
+    function showError(msg) {
+      const alertBox = document.getElementById("errorAlert");
+      const box = document.getElementById("errorMessage");
+      box.innerHTML = '<div class="result-item error">' + msg + "</div>";
+      alertBox.classList.add("active");
+      document.getElementById("successAlert").classList.remove("active");
+    }
+  </script>
+</body>
+</html>
